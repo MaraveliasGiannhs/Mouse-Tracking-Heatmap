@@ -172,7 +172,7 @@ except KeyboardInterrupt:
     # AI to determine activity level
     def determine_activity_level(avg_heatmap, avg_border, avg_minimap):
 
-        if avg_heatmap < 0.3:
+        if avg_heatmap < 0.3: #values will change after tests
             print( "Your general movements in the game were not that many. ")
         elif avg_heatmap < 0.7:
             print ("Your general movements in the game were higher than the average. ")
