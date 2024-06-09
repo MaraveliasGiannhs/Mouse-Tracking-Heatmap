@@ -171,7 +171,6 @@ except KeyboardInterrupt:
 
     # AI to determine activity level
     def determine_activity_level(avg_heatmap, avg_border, avg_minimap):
-        # score = (avg_heatmap + avg_border + avg_minimap) / 3
 
         if avg_heatmap < 0.3:
             print( "Your general movements in the game were not that many. ")
@@ -194,7 +193,7 @@ except KeyboardInterrupt:
         else:
             print( "You moved your camera through minimap very often")
 
-    # Determine the activity level
+    # Print the activity level
     determine_activity_level(avg_normalized_heatmap, avg_normalized_border, avg_normalized_minimap)
 
 
