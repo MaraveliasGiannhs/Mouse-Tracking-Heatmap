@@ -60,16 +60,16 @@ def on_release(key):
     if key in pressed_keys:
         pressed_keys.remove(key)
 
-# Function to stop the listener gracefully
+# stop the listener 
 def stop_listener():
     stop_event.set()
     mouse_listener.stop()
     keyboard_listener.stop()
 
-# Create an event to signal stopping the listener
+# event to signal stopping the listener
 stop_event = threading.Event()
 
-# Set up the mouse and keyboard listeners
+# mouse and keyboard listeners
 mouse_listener = MouseListener(on_move=on_move, on_click=on_click)
 keyboard_listener = KeyboardListener(on_press=on_press, on_release=on_release)
 mouse_listener.start()
@@ -85,26 +85,26 @@ except KeyboardInterrupt:
     print("Mouse and keyboard tracking stopped.")
     stop_listener()
 
-    # Create a heatmap using seaborn
+    # Create a heatmap 
     heatmap_data, xedges, yedges = np.histogram2d(x_coords, y_coords, bins=(64, 64), range=[[0, screen_width], [0, screen_height]])
     heatmap_data = np.rot90(heatmap_data)
     heatmap_data = np.flipud(heatmap_data)
 
-    # Save the heatmap data to a list of lists
+    #save the heatmap
     heatmap_values = heatmap_data.tolist()
     
-    # Normalize the heatmap values
+    # Normalize values
     max_value = np.max(heatmap_data)
     normalized_heatmap_values = (heatmap_data / max_value).tolist()
 
-    # Extract border values (2-pixel border)
+    # extract border values (2-pixel border)
     border_values = []
     
     # Top and bottom borders
     border_values.extend(heatmap_values[:2])  # Top 2 rows
     border_values.extend(heatmap_values[-2:])  # Bottom 2 rows
     
-    # Left and right borders (excluding corners already included)
+    # Left and right borders
     for row in heatmap_values[2:-2]:
         border_values.append(row[:2])  # First 2 columns
         border_values.append(row[-2:])  # Last 2 columns
@@ -116,7 +116,7 @@ except KeyboardInterrupt:
     max_border_value = max(flattened_border_values)
     normalized_flattened_border_values = [val / max_border_value for val in flattened_border_values]
 
-    # Extract minimap values for the specified range
+    # extract minimap values for the specified range
     minimap = []
     for y in range(46, 61):  # y from 46 to 60
         for x in range(52, 63):  # x from 52 to 62
@@ -135,12 +135,12 @@ except KeyboardInterrupt:
     avg_minimap = np.mean([value for _, _, value in minimap])
     avg_normalized_minimap = np.mean([value / max_value for _, _, value in minimap])
 
-    # Print the normalized heatmap values list
+    # print normalized heatmap
     print("Normalized heatmap values (saved to list):")
     for row in normalized_heatmap_values:
         print(' '.join(f'{val:0.2f}' for val in row))
 
-    # Print the normalized border values list
+    # print normalized border values list
     print("\nNormalized border values (saved to list):")
     print(normalized_flattened_border_values)
 
@@ -149,7 +149,7 @@ except KeyboardInterrupt:
     for x, y, value in minimap:
         print(f"({x}, {y}): {value:.2f}")
 
-    # Print the averages
+    # print the averages
     print(f"\nAverage heatmap value: {avg_heatmap:.2f} (original), {avg_normalized_heatmap:.2f} (normalized)")
     print(f"Average border value: {avg_border:.2f} (original), {avg_normalized_border:.2f} (normalized)")
     print(f"Average minimap value: {avg_minimap:.2f} (original), {avg_normalized_minimap:.2f} (normalized)")
@@ -169,7 +169,7 @@ except KeyboardInterrupt:
     plt.ylabel('Y Coordinate')
     plt.show()
 
-    # AI to determine activity level
+    # AI for activity level
     def determine_activity_level(avg_heatmap, avg_border, avg_minimap):
 
         if avg_heatmap < 0.3: #values will change after tests
