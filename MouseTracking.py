@@ -6,6 +6,8 @@ import seaborn as sns
 import numpy as np
 import threading
 from screeninfo import get_monitors
+import io
+import time
 
 # Get the screen resolution
 monitor = get_monitors()[0]
@@ -60,16 +62,16 @@ def on_release(key):
     if key in pressed_keys:
         pressed_keys.remove(key)
 
-# stop the listener 
+# Function to stop the listener gracefully
 def stop_listener():
     stop_event.set()
     mouse_listener.stop()
     keyboard_listener.stop()
 
-# event to signal stopping the listener
+# Create an event to signal stopping the listener
 stop_event = threading.Event()
 
-# mouse and keyboard listeners
+# Set up the mouse and keyboard listeners
 mouse_listener = MouseListener(on_move=on_move, on_click=on_click)
 keyboard_listener = KeyboardListener(on_press=on_press, on_release=on_release)
 mouse_listener.start()
@@ -82,29 +84,30 @@ try:
     while not stop_event.is_set():
         stop_event.wait(1)
 except KeyboardInterrupt:
+    timestamp = int(time.time())
     print("Mouse and keyboard tracking stopped.")
     stop_listener()
 
-    # Create a heatmap 
+    # Create a heatmap using seaborn
     heatmap_data, xedges, yedges = np.histogram2d(x_coords, y_coords, bins=(64, 64), range=[[0, screen_width], [0, screen_height]])
     heatmap_data = np.rot90(heatmap_data)
     heatmap_data = np.flipud(heatmap_data)
 
-    #save the heatmap
+    # Save the heatmap data to a list of lists
     heatmap_values = heatmap_data.tolist()
     
-    # Normalize values
+    # Normalize the heatmap values
     max_value = np.max(heatmap_data)
     normalized_heatmap_values = (heatmap_data / max_value).tolist()
 
-    # extract border values (2-pixel border)
+    # Extract border values (2-pixel border)
     border_values = []
     
     # Top and bottom borders
     border_values.extend(heatmap_values[:2])  # Top 2 rows
     border_values.extend(heatmap_values[-2:])  # Bottom 2 rows
     
-    # Left and right borders
+    # Left and right borders (excluding corners already included)
     for row in heatmap_values[2:-2]:
         border_values.append(row[:2])  # First 2 columns
         border_values.append(row[-2:])  # Last 2 columns
@@ -116,7 +119,7 @@ except KeyboardInterrupt:
     max_border_value = max(flattened_border_values)
     normalized_flattened_border_values = [val / max_border_value for val in flattened_border_values]
 
-    # extract minimap values for the specified range
+    # Extract minimap values for the specified range
     minimap = []
     for y in range(46, 61):  # y from 46 to 60
         for x in range(52, 63):  # x from 52 to 62
@@ -135,12 +138,12 @@ except KeyboardInterrupt:
     avg_minimap = np.mean([value for _, _, value in minimap])
     avg_normalized_minimap = np.mean([value / max_value for _, _, value in minimap])
 
-    # print normalized heatmap
+    # Print the normalized heatmap values list
     print("Normalized heatmap values (saved to list):")
     for row in normalized_heatmap_values:
         print(' '.join(f'{val:0.2f}' for val in row))
 
-    # print normalized border values list
+    # Print the normalized border values list
     print("\nNormalized border values (saved to list):")
     print(normalized_flattened_border_values)
 
@@ -149,7 +152,7 @@ except KeyboardInterrupt:
     for x, y, value in minimap:
         print(f"({x}, {y}): {value:.2f}")
 
-    # print the averages
+    # Print the averages
     print(f"\nAverage heatmap value: {avg_heatmap:.2f} (original), {avg_normalized_heatmap:.2f} (normalized)")
     print(f"Average border value: {avg_border:.2f} (original), {avg_normalized_border:.2f} (normalized)")
     print(f"Average minimap value: {avg_minimap:.2f} (original), {avg_normalized_minimap:.2f} (normalized)")
@@ -169,31 +172,14 @@ except KeyboardInterrupt:
     plt.ylabel('Y Coordinate')
     plt.show()
 
-    # AI for activity level
-    def determine_activity_level(avg_heatmap, avg_border, avg_minimap):
+    file_path = "file.txt"
+ 
+    # Open the file in write mode using io.open()
+    with io.open(file_path, 'w', encoding='utf-8') as file:
+    # Write content to the file
+        file.write(f"{timestamp} ")
+        for row in normalized_heatmap_values:
+            file.write(' '.join(f'{val:0.2f}' for val in row))
 
-        if avg_heatmap < 0.3: #values will change after tests
-            print( "Your general movements in the game were not that many. ")
-        elif avg_heatmap < 0.7:
-            print ("Your general movements in the game were higher than the average. ")
-        else:
-            print ("Your general movements in the game were very high. ")
-        
-        if avg_border < 0.3:
-            print( "You didnt move your camera that often. ")
-        elif avg_border < 0.7:
-            print( "You moved your camera often")
-        else:
-            print( "You moved your camera very often")
-        
-        if avg_minimap < 0.3:
-            print( "You didnt move your camera through minimap very often")
-        elif avg_minimap < 0.7:
-            print( "You moved your camera through minimap often")
-        else:
-            print( "You moved your camera through minimap very often")
-
-    # Print the activity level
-    determine_activity_level(avg_normalized_heatmap, avg_normalized_border, avg_normalized_minimap)
-
-
+# Get the current time in seconds since the epoch
+print(f"The current Unix timestamp is: {timestamp}")
